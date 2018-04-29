@@ -3,7 +3,7 @@ use ncurses::{
     printw,
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Window {
     pub x: i32,
     pub y: i32,
@@ -34,5 +34,30 @@ impl Window {
             w: w,
             h: h,
         }
+    }
+}
+
+#[cfg(test)]
+mod window_tests {
+    use window;
+
+    #[test]
+    fn test_new() {
+        let w = window::Window::new(0,1,2,3);
+        assert_eq!(w.x, 0);
+        assert_eq!(w.y, 1);
+        assert_eq!(w.w, 2);
+        assert_eq!(w.h, 3);
+    }
+
+    #[test]
+    fn test_equality() {
+        let w1 = window::Window::new(0,0,0,0);
+        let w2 = window::Window::new(0,0,1,1);
+        let w3 = window::Window::new(0,0,0,0);
+
+        assert_ne!(w1,w2);
+        assert_eq!(w1,w3);
+        assert_ne!(w2,w3);
     }
 }

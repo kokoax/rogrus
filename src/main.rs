@@ -13,6 +13,7 @@ use rogrus::ncurses::{
 };
 
 use rogrus::window;
+use rogrus::window::WindowExt;
 use rogrus::map;
 use rogrus::creature;
 use rogrus::message;
@@ -38,9 +39,26 @@ fn main() {
     curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
     noecho();
 
-    let mut p = creature::Creature::player();
-    let m = map::Map::new();
-    let mut msg = message::Message::new();
+    let mut p = creature::Creature::player(window::Window::new(1,1,1,1));
+    let m = map::Map::new(&window::Window::new(0,0,16,16), &vec![
+                          String::from("########        "),
+                          String::from("#......#        "),
+                          String::from("#..##..#        "),
+                          String::from("#..#####        "),
+                          String::from("##.#####        "),
+                          String::from("##....##        "),
+                          String::from("##....##        "),
+                          String::from("########        "),
+                          String::from("                "),
+                          String::from("                "),
+                          String::from("                "),
+                          String::from("                "),
+                          String::from("                "),
+                          String::from("                "),
+                          String::from("                "),
+                          String::from("                "),
+    ]);
+    let mut msg = message::Message::new(&window::Window::new(0,16,16,5));
     view(vec![&m,&msg,&p]);
 
     let mut done = false;
@@ -48,25 +66,26 @@ fn main() {
         String::from(""),
         String::from(""),
         String::from(""),
+        String::from(""),
+        String::from(""),
     ];
     let mut msg_buf: Vec<String>;
     while !done {
         let key = getch();
-        let key_s = key.to_string();
         msg_buf = msg_frash.clone();
-        msg_buf[0] = key_s.to_string();
+        msg_buf[0] = key.to_string();
 
-        match key_s.as_str() {
-            "119" => p.mv(&m, creature::DIRECTION::UP),
-            "97"  => p.mv(&m, creature::DIRECTION::LEFT),
-            "115" => p.mv(&m, creature::DIRECTION::DOWN),
-            "100" => p.mv(&m, creature::DIRECTION::RIGHT),
-            "32"  => msg_buf[1] = look(&m,&p),
-            "113" => done = true,
+        match key {
+            107 => if m.is_move_possible(&p.as_window(), creature::DIRECTION::UP)    { p = p.mv(creature::DIRECTION::UP) },
+            104 => if m.is_move_possible(&p.as_window(), creature::DIRECTION::LEFT)  { p = p.mv(creature::DIRECTION::LEFT) },
+            106 => if m.is_move_possible(&p.as_window(), creature::DIRECTION::DOWN)  { p = p.mv(creature::DIRECTION::DOWN) },
+            108 => if m.is_move_possible(&p.as_window(), creature::DIRECTION::RIGHT) { p = p.mv(creature::DIRECTION::RIGHT) },
+            32  => msg_buf[1] = look(&m,&p),
+            113 => done = true,
             _   => (),
         }
 
-        msg.update(msg_buf.clone());
+        msg = msg.update(&msg_buf).unwrap();
         view(vec![&m,&msg,&p]);
     }
 

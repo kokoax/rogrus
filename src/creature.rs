@@ -1,8 +1,8 @@
 use ncurses;
 
 use window;
-use map;
 
+#[derive(Eq, PartialEq)]
 pub enum DIRECTION {
     UP,
     DOWN,
@@ -10,25 +10,25 @@ pub enum DIRECTION {
     RIGHT,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Creature {
     pub win: window::Window,
     pub c: String,
 }
 
 impl Creature {
-    pub fn player() -> Creature {
-        Creature::new(String::from("@"))
+    pub fn player(win: window::Window) -> Creature {
+        Creature::new(String::from("@"), win)
     }
 
-    pub fn new(c: String) -> Creature {
+    pub fn new(c: String, win: window::Window) -> Creature {
         Creature {
-            win: window::Window::new(1,1,1,1),
-            c: c
+            win: win,
+            c: c,
         }
     }
 
-    pub fn mv(&mut self, m: &map::Map, d: DIRECTION) {
+    pub fn mv(&self, d: DIRECTION) -> Creature {
         let mut nc = self.clone();
         match d {
             DIRECTION::UP    => nc.win.y -= 1,
@@ -36,10 +36,7 @@ impl Creature {
             DIRECTION::DOWN  => nc.win.y += 1,
             DIRECTION::RIGHT => nc.win.x += 1,
         }
-        if m.map[nc.win.y as usize].as_bytes()[nc.win.x as usize] == 46 {
-            self.win.x = nc.win.x;
-            self.win.y = nc.win.y;
-        }
+        return nc;
     }
 }
 impl window::WindowExt for Creature {
@@ -50,5 +47,62 @@ impl window::WindowExt for Creature {
 
     fn as_window(&self) -> window::Window {
         self.win.clone()
+    }
+}
+
+#[cfg(test)]
+mod creature_tests {
+    use window;
+    use creature;
+
+    #[test]
+    fn test_new() {
+        let w = window::Window::new(1,1,1,1);
+        let c = creature::Creature::new(String::from("i"), w.clone());
+        assert_eq!(c.win, w.clone());
+        assert_eq!(c.c, "i");
+    }
+
+    #[test]
+    fn test_player() {
+        let win = window::Window::new(1,1,1,1);
+        let p = creature::Creature::player(win.clone());
+        let c = creature::Creature::new(String::from("@"), win.clone());
+        assert_eq!(p, c);
+    }
+
+    #[test]
+    fn test_equality() {
+        let w = window::Window::new(1,1,1,1);
+        let c1 = creature::Creature::new(String::from("i"), w.clone());
+        let c2 = creature::Creature::new(String::from("@"), w.clone());
+        let p  = creature::Creature::new(String::from("@"), w.clone());
+
+        assert_ne!(c1, c2);
+        assert_eq!(p, c2);
+        assert_ne!(p, c1);
+    }
+
+    #[test]
+    fn test_mv() {
+        let w    = window::Window::new(1,1,1,1);
+        let c = creature::Creature::new(String::from("i"), w.clone());
+        let mut moved_c = creature::Creature::new(String::from("i"), w.clone());
+        let w_up    = window::Window::new(1,0,1,1);
+        let w_down  = window::Window::new(1,2,1,1);
+        let w_left  = window::Window::new(0,1,1,1);
+        let w_right = window::Window::new(2,1,1,1);
+
+        moved_c.win = w_up.clone();
+        assert_eq!(c.mv(creature::DIRECTION::UP), moved_c);
+
+        moved_c.win = w_down.clone();
+        assert_eq!(c.mv(creature::DIRECTION::DOWN), moved_c);
+
+        moved_c.win = w_left.clone();
+        assert_eq!(c.mv(creature::DIRECTION::LEFT), moved_c);
+
+        moved_c.win = w_right.clone();
+        assert_eq!(c.mv(creature::DIRECTION::RIGHT), moved_c);
     }
 }
