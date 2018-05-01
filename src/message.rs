@@ -1,5 +1,6 @@
 use ncurses;
 
+use object;
 use window;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -8,15 +9,23 @@ pub struct Message {
     pub buf: Vec<String>,
 }
 
-impl Message {
-    pub fn new(win: &window::Window) -> Message {
+pub trait MessageExt: window::WindowExt {
+    fn new(win: &window::Window) -> Message;
+    fn new_with_buf(win: &window::Window, buf: &Vec<String>) -> Result<Message, String>;
+    fn update(&self, buf: &Vec<String>) -> Result<Message, String>;
+}
+
+impl object::ObjectExt for Message {}
+
+impl MessageExt for Message {
+    fn new(win: &window::Window) -> Message {
         Message {
             win: win.clone(),
             buf: vec![String::from(""); win.y as usize],
         }
     }
 
-    pub fn new_with_buf(win: &window::Window, buf: &Vec<String>) -> Result<Message, String> {
+    fn new_with_buf(win: &window::Window, buf: &Vec<String>) -> Result<Message, String> {
         if (buf.len() as i32) == win.h {
             return Ok(Message {
                 win: win.clone(),
@@ -27,10 +36,11 @@ impl Message {
         }
     }
 
-    pub fn update(&self, buf: &Vec<String>) -> Result<Message, String> {
+    fn update(&self, buf: &Vec<String>) -> Result<Message, String> {
         return Message::new_with_buf(&self.win, &buf);
     }
 }
+
 impl window::WindowExt for Message {
     fn view(&self) {
         for y in (self.win.y)..(self.win.y+self.win.h) {
@@ -47,6 +57,7 @@ impl window::WindowExt for Message {
 mod message_tests {
     use window;
     use message;
+    use message::MessageExt;
 
     #[test]
     fn test_new() {

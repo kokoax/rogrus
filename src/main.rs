@@ -15,8 +15,11 @@ use rogrus::ncurses::{
 use rogrus::window;
 use rogrus::window::WindowExt;
 use rogrus::map;
+use rogrus::map::MapExt;
 use rogrus::creature;
+use rogrus::creature::CreatureExt;
 use rogrus::message;
+use rogrus::message::MessageExt;
 
 fn view(obj: Vec<&window::WindowExt>) {
     for o in obj {
@@ -39,7 +42,7 @@ fn main() {
     curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
     noecho();
 
-    let mut p = creature::Creature::player(window::Window::new(1,1,1,1));
+    let mut p = creature::Creature::player(&window::Window::new(1,1,1,1));
     let m = map::Map::new(&window::Window::new(0,0,16,16), &vec![
                           String::from("########        "),
                           String::from("#......#        "),

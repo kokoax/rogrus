@@ -5,6 +5,7 @@ use ncurses::{
     printw,
 };
 
+use object;
 use window;
 use creature;
 
@@ -14,15 +15,20 @@ pub struct Map {
     pub map: Vec<String>,
 }
 
-impl Map {
-    pub fn new(win: &window::Window, map: &Vec<String>) -> Map {
+pub trait MapExt: window::WindowExt {
+    fn new(win: &window::Window, map: &Vec<String>) -> Map;
+    fn is_move_possible(&self, win: &window::Window, dir: creature::DIRECTION) -> bool;
+}
+
+impl MapExt for Map {
+    fn new(win: &window::Window, map: &Vec<String>) -> Map {
         Map {
             win: win.clone(),
             map: map.clone(),
         }
     }
 
-    pub fn is_move_possible(&self, win: &window::Window, dir: creature::DIRECTION) -> bool {
+    fn is_move_possible(&self, win: &window::Window, dir: creature::DIRECTION) -> bool {
         let next_tile = match dir {
             creature::DIRECTION::UP    => self.map[(win.y-1) as usize].as_bytes()[win.x as usize],
             creature::DIRECTION::DOWN  => self.map[(win.y+1) as usize].as_bytes()[win.x as usize],
@@ -49,10 +55,13 @@ impl window::WindowExt for Map {
     }
 }
 
+impl object::ObjectExt for Map {}
+
 #[cfg(test)]
 mod map_tests {
     use window;
     use map;
+    use map::MapExt;
     use creature;
 
     #[test]

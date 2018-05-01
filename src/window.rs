@@ -3,6 +3,8 @@ use ncurses::{
     printw,
 };
 
+use object;
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Window {
     pub x: i32,
@@ -11,7 +13,7 @@ pub struct Window {
     pub h: i32,
 }
 
-pub trait WindowExt {
+pub trait WindowExt: object::ObjectExt {
     fn view(&self);
 
     fn clear(&self) {
@@ -25,6 +27,8 @@ pub trait WindowExt {
     }
     fn as_window(&self) -> Window;
 }
+
+impl object::ObjectExt for Window {}
 
 impl Window {
     pub fn new(x: i32, y: i32, w: i32, h: i32) -> Window {
